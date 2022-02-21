@@ -33,7 +33,7 @@ DataWriteIO(String HeaderPath,String InvoicePath, List<ArrayList<String>> Header
                     elementindx++;
                     write2.append(element);
                     write2.append(",");
-                    if(elementindx==3){
+                    if(elementindx==4){
                         break;
                     }
                 }

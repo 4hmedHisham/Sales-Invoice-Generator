@@ -3,6 +3,8 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
 import java.awt.event.ActionEvent;
@@ -21,7 +23,7 @@ public class GUI extends JFrame implements ActionListener {
         {
             Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
-            if(table.getColumnName(column).equals("No.")  ||table.getColumnName(column).equals("Total")||table.getColumnName(column).equals("Item Total")||table.getColumnName(column).equals("Date"))
+            if(table.getColumnName(column).equals("No.")  ||table.getColumnName(column).equals("Total")||table.getColumnName(column).equals("Item Total"))
                 c.setBackground( Color.LIGHT_GRAY);
             else
                 c.setBackground(table.getBackground());
@@ -31,6 +33,7 @@ public class GUI extends JFrame implements ActionListener {
 
     }
     private boolean IsReset=true;
+
     private JPanel LeftPanel;
     private JPanel RightPanel;
     private JPanel inoviceNumberPanel;
@@ -57,7 +60,7 @@ public class GUI extends JFrame implements ActionListener {
     private JLabel invoiceDateLabel;
     private JLabel CustomerNameLabel;
     private JLabel invoiceTotalLabel;
-    private JLabel getInvoiceTotalLabel2;
+    private JLabel Total_items_label_right_side;
     private JLabel invoiceItems;
 
 
@@ -98,14 +101,14 @@ public class GUI extends JFrame implements ActionListener {
     
     enum DetailsEnum {
     	  No,
-    	  Date,
+    	  Item_Name,
           Item_Price,
           Count,
           itemtotal
     	}
     enum HeaderEnum {
         No,
-        ItemName,
+        Date,
         CusomterName,
         Total
     }
@@ -153,7 +156,7 @@ public class GUI extends JFrame implements ActionListener {
                     }
                 }
                 HeaderData.get(highlightedrow).set(HeaderEnum.Total.ordinal(),String.valueOf(sum));
-                getInvoiceTotalLabel2.setText(String.valueOf(sum));
+                Total_items_label_right_side.setText(String.valueOf(sum));
                 CustomerName.setText(HeaderData.get(highlightedrow).get(HeaderEnum.CusomterName.ordinal()));
 
                 HeaderTableModel=new tablemodel(colNames,HeaderData);
@@ -174,8 +177,21 @@ public class GUI extends JFrame implements ActionListener {
 
                             }
                         }
-                        getInvoiceTotalLabel2.setText(String.valueOf(sum));
+                        Total_items_label_right_side.setText(String.valueOf(sum));
                         CustomerName.setText(HeaderData.get(highlightedrow).get(HeaderEnum.CusomterName.ordinal()));
+                        if(e.getColumn()==HeaderEnum.Date.ordinal()){
+
+                                SimpleDateFormat formatter2=new SimpleDateFormat("dd-MM-yyyy");
+                                try {
+                                    Date today= formatter2.parse("x-11-2022");
+                                } catch (ParseException parseException) {
+                                    Object x =e.getSource();
+//                                    JOptionPane.showMessageDialog(,
+//                                            "Bad Date Formatting!");
+                                }
+
+
+                        }
                     }
                 });
 
@@ -266,12 +282,12 @@ public class GUI extends JFrame implements ActionListener {
 
         invoiceTotalLabel=new JLabel("Invoice Total");
         invoicetotal=300;
-        getInvoiceTotalLabel2= new JLabel("INIT");
-        getInvoiceTotalLabel2.setAlignmentX(JLabel.LEFT_ALIGNMENT);
+        Total_items_label_right_side = new JLabel("INIT");
+        Total_items_label_right_side.setAlignmentX(JLabel.LEFT_ALIGNMENT);
         invoiceTotalPanel=new JPanel();
         invoiceTotalPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
         invoiceTotalPanel.add(invoiceTotalLabel);
-        invoiceTotalPanel.add(getInvoiceTotalLabel2);
+        invoiceTotalPanel.add(Total_items_label_right_side);
 
         RightUpperTitlesPanel= new JPanel();
         //RightUpperTitlesPanel.setBackground(Color.red);
@@ -286,7 +302,7 @@ public class GUI extends JFrame implements ActionListener {
         RighterUpperDataPanel.setLayout(new BoxLayout(RighterUpperDataPanel,BoxLayout.Y_AXIS));
         RighterUpperDataPanel.add(invoiceNumber);
         RighterUpperDataPanel.add(CustomerName);
-        RighterUpperDataPanel.add(getInvoiceTotalLabel2);
+        RighterUpperDataPanel.add(Total_items_label_right_side);
 
         CombinedRightUpperPanel=new JPanel();
         CombinedRightUpperPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
@@ -389,11 +405,11 @@ public class GUI extends JFrame implements ActionListener {
         		      invoiceNumber.setText(InvoiceNumber);
         		      CustomerName.setText((String) invoice_table.getValueAt(row, HeaderEnum.CusomterName.ordinal()));
         		     try {
-        		    	 getInvoiceTotalLabel2.setText((String) invoice_table.getValueAt(row, HeaderEnum.Total.ordinal()));
+        		    	 Total_items_label_right_side.setText((String) invoice_table.getValueAt(row, HeaderEnum.Total.ordinal()));
         		     }
         		     catch (Exception e1) {
 						// TODO: handle exception
-        		    	 getInvoiceTotalLabel2.setText("0");
+        		    	 Total_items_label_right_side.setText("0");
 					}
         		     try{
                          List<ArrayList<String>> rightlist=new ArrayList<ArrayList<String>>();
@@ -441,6 +457,7 @@ public class GUI extends JFrame implements ActionListener {
         		    }
         		  }
         		});
+
 
 
     }
@@ -503,14 +520,33 @@ public class GUI extends JFrame implements ActionListener {
 
     }
     public void CreateNewInvoice(){
-            String today= Instant.now().toString();
-            today=today.replaceAll("T.*","");
+//            SimpleDateFormat formatter2=new SimpleDateFormat("dd-MM-yyyy");
+//            String today= formatter2.format(Instant.now());
+//            today=today.replaceAll("T.*","");
             int rows=invoice_table.getRowCount();
-            String [] line={String.valueOf(rows+1),today," "," "};
+            String [] line={String.valueOf(rows+1),""," "," "};
 
         HeaderData.add(new ArrayList<String> (Arrays.asList(line)));
         tablemodel newmodel= new tablemodel(colNames, HeaderData);
         invoice_table.setModel(newmodel);
+        invoice_table.getModel().addTableModelListener(new TableModelListener(){
+
+            @Override
+            public void tableChanged(TableModelEvent e) {
+                if(e.getColumn()==HeaderEnum.Date.ordinal()){
+                    SimpleDateFormat formatter2=new SimpleDateFormat("dd-MM-yyyy");
+                    try {
+                        Date today= formatter2.parse((String)invoice_table.getValueAt(e.getFirstRow(),e.getColumn()));
+                        System.out.println("DATE IS "+today);
+                    }
+                    catch (ParseException parseException) {
+                        JOptionPane.showMessageDialog(invoice_table.getParent(),
+                                "Invalid Date Format");
+                        //parseException.printStackTrace();
+                    }
+                }
+            }
+        });
         DetailsTableModel=new tablemodel(cols2,new ArrayList<ArrayList<String>>());
         invoiceItemsTable.setModel(DetailsTableModel);
 
@@ -523,6 +559,24 @@ public class GUI extends JFrame implements ActionListener {
         ItemsDeatilsDataSorted.remove(highlightedrow);
         tablemodel newmodel= new tablemodel(colNames, HeaderData);
         invoice_table.setModel(newmodel);
+        invoice_table.getModel().addTableModelListener(new TableModelListener(){
+
+            @Override
+            public void tableChanged(TableModelEvent e) {
+                if(e.getColumn()==HeaderEnum.Date.ordinal()){
+                    SimpleDateFormat formatter2=new SimpleDateFormat("dd-MM-yyyy");
+                    try {
+                        Date today= formatter2.parse("x2-11-2022");
+                        System.out.println("DATE IS "+today);
+                    }
+                    catch (ParseException parseException) {
+                        JOptionPane.showMessageDialog((JTable)e.getSource(),
+                                "PRASE ERROR");
+                        parseException.printStackTrace();
+                    }
+                }
+            }
+        });
         DetailsTableModel=new tablemodel(cols2,new ArrayList<ArrayList<String>>());
         invoiceItemsTable.setModel(DetailsTableModel);
 
@@ -576,6 +630,24 @@ public class GUI extends JFrame implements ActionListener {
                 // listoflists.add(new ArrayList<String> (Arrays.asList(emptyleft)));
                 tablemodel newmodel= new tablemodel(colNames, HeaderData);
                 invoice_table.setModel(newmodel);
+            invoice_table.getModel().addTableModelListener(new TableModelListener(){
+
+                @Override
+                public void tableChanged(TableModelEvent e) {
+                    if(e.getColumn()==HeaderEnum.Date.ordinal()){
+                        SimpleDateFormat formatter2=new SimpleDateFormat("dd-MM-yyyy");
+                        try {
+                            Date today= formatter2.parse((String) invoice_table.getValueAt(e.getFirstRow(),e.getColumn()));
+                            System.out.println("DATE IS "+today);
+                        }
+                        catch (ParseException parseException) {
+                            JOptionPane.showMessageDialog((JTable)invoice_table,
+                                    "PRASE ERROR");
+                            //parseException.printStackTrace();
+                        }
+                    }
+                }
+            });
 
 
 
