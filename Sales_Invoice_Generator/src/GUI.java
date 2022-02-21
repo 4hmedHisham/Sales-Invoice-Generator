@@ -748,12 +748,21 @@ public class GUI extends JFrame implements ActionListener {
             JOptionPane.showMessageDialog(this,
                     "Please Choose the invoice Line");
             path = openfile();
-            InvoicePath=path;
+            while(!path.endsWith(".csv")){
+                JOptionPane.showMessageDialog(this,
+                        "Invalid Fiel Format Please Re-chose the csv file for invoice line");
+                path=openfile();
+            }
             // isHeader;
             LoadLines(path);
             JOptionPane.showMessageDialog(this,
                     "Please Choose the Header Line");
             path = openfile();
+            while(!path.endsWith(".csv")){
+                JOptionPane.showMessageDialog(this,
+                        "Invalid Fiel Format Please Re-chose the csv file for Header line");
+                path=openfile();
+            }
             HeaderPath=path;
             LoadHeaders(path);
         }
