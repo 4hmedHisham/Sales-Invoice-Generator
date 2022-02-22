@@ -446,6 +446,7 @@ public class GUI extends JFrame implements ActionListener {
         		     catch (Exception ex){
                          DetailsTableModel=new tablemodel(cols2,new ArrayList<ArrayList<String>>());
                          invoiceItemsTable.setModel(DetailsTableModel);
+                         update_InvoiceLine_model();
                      }
 
         		        while(CurrentRowsAdded>0 ){
@@ -556,7 +557,19 @@ public class GUI extends JFrame implements ActionListener {
     }
     public void DeleteInvoice(){
         HeaderData.remove(highlightedrow);
+        int index=1;
+        for(ArrayList<String> Row : HeaderData){
+            Row.set(HeaderEnum.No.ordinal(), String.valueOf(index));
+            index++;
+        }
         ItemsDeatilsDataSorted.remove(highlightedrow);
+        index=1;
+        for(ArrayList<ArrayList<String>>batch : ItemsDeatilsDataSorted){
+                for(ArrayList<String> Row : batch){
+                    Row.set(HeaderEnum.No.ordinal(), String.valueOf(index));
+                }
+                index++;
+        }
         tablemodel newmodel= new tablemodel(colNames, HeaderData);
         invoice_table.setModel(newmodel);
         invoice_table.getModel().addTableModelListener(new TableModelListener(){
@@ -730,14 +743,7 @@ public class GUI extends JFrame implements ActionListener {
 
              }
             update_InvoiceLine_model();
-//             tablemodel t1= (tablemodel) invoiceItemsTable.getModel();
-//             Item
-//             t1.fireTableDataChanged();
-		     //t3.fireTableDataChanged();
 
-		     //ItemsDeatilsData.add(new ArrayList<String> (Arrays.asList(arrIn)));
-             //HeaderTableModel= new tablemodel(cols2,ItemsDeatilsDataSorted.get(highlightedrow));
-		     //invoiceItemsTable.setModel(HeaderTableModel);
         	
         }
         if(e.getActionCommand()=="Create"){
@@ -760,7 +766,7 @@ public class GUI extends JFrame implements ActionListener {
             path = openfile();
             while(!path.endsWith(".csv")){
                 JOptionPane.showMessageDialog(this,
-                        "Invalid Fiel Format Please Re-chose the csv file for Header line");
+                        "Invalid Field Format Please Re-chose the csv file for Header line");
                 path=openfile();
             }
             HeaderPath=path;
