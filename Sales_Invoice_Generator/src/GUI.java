@@ -1,4 +1,6 @@
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -23,7 +25,7 @@ public class GUI extends JFrame implements ActionListener {
         {
             Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
-            if(table.getColumnName(column).equals("No.")  ||table.getColumnName(column).equals("Total")||table.getColumnName(column).equals("Item Total"))
+            if(table.getColumnName(column).equals("No.")  ||table.getColumnName(column).equals("Total")||table.getColumnName(column).equals("Item Total")||table.getColumnName(column).equals("Date")||table.getColumnName(column).equals("Customer"))
                 c.setBackground( Color.LIGHT_GRAY);
             else
                 c.setBackground(table.getBackground());
@@ -74,7 +76,7 @@ public class GUI extends JFrame implements ActionListener {
     private int invoicetotal;
 
     private JTextField invoiceDate;
-    private JLabel CustomerName;
+    private JTextField CustomerName;
     private JMenuBar filemenubar;
     private JMenu file;
     private JMenuItem savefile;
@@ -158,6 +160,8 @@ public class GUI extends JFrame implements ActionListener {
                 HeaderData.get(highlightedrow).set(HeaderEnum.Total.ordinal(),String.valueOf(sum));
                 Total_items_label_right_side.setText(String.valueOf(sum));
                 CustomerName.setText(HeaderData.get(highlightedrow).get(HeaderEnum.CusomterName.ordinal()));
+
+
 
                 HeaderTableModel=new tablemodel(colNames,HeaderData);
                 invoice_table.setModel(HeaderTableModel);
@@ -274,7 +278,7 @@ public class GUI extends JFrame implements ActionListener {
 
         CustomerNameLabel= new JLabel("Customer Name");
         CustomerNamePanel = new JPanel();
-        CustomerName = new JLabel(" ");
+        CustomerName = new JTextField("");
         CustomerName.setAlignmentX(JLabel.LEFT_ALIGNMENT);
         CustomerNamePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
         CustomerNamePanel.add(CustomerNameLabel);
@@ -293,19 +297,25 @@ public class GUI extends JFrame implements ActionListener {
         //RightUpperTitlesPanel.setBackground(Color.red);
         RightUpperTitlesPanel.setLayout(new BoxLayout(RightUpperTitlesPanel,BoxLayout.Y_AXIS));
         RightUpperTitlesPanel.add(invoiceNumber_title);
+        RightUpperTitlesPanel.add(invoiceDateLabel);
         RightUpperTitlesPanel.add(CustomerNameLabel);
         RightUpperTitlesPanel.add(invoiceTotalLabel);
+
 
 
         RighterUpperDataPanel= new JPanel();
         //RighterUpperDataPanel.setBackground(Color.BLUE);
         RighterUpperDataPanel.setLayout(new BoxLayout(RighterUpperDataPanel,BoxLayout.Y_AXIS));
         RighterUpperDataPanel.add(invoiceNumber);
+        RighterUpperDataPanel.add(invoiceDate);
         RighterUpperDataPanel.add(CustomerName);
         RighterUpperDataPanel.add(Total_items_label_right_side);
 
+
+
         CombinedRightUpperPanel=new JPanel();
         CombinedRightUpperPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        //CombinedRightUpperPanel.add(invoiceDatePanel);
         CombinedRightUpperPanel.add(RightUpperTitlesPanel);
         CombinedRightUpperPanel.add(RighterUpperDataPanel);
 
@@ -328,7 +338,7 @@ public class GUI extends JFrame implements ActionListener {
         //invoiceItemsTable.setModel(HeaderTableModel);
         invoiceItemsTable.setDefaultRenderer(Object.class, myRenderer);
 
-        SaveButton = new JButton("Save Currently Added Details Addition");
+        SaveButton = new JButton("Save Current Header/Details status");
         SaveButton.addActionListener(this);
         SaveButton.setActionCommand("LocalSave");
         CancelButton=new JButton("Cancel");
@@ -345,7 +355,7 @@ public class GUI extends JFrame implements ActionListener {
 
         //bluePanel.add(b1);
 //        RightPanel.add(inoviceNumberPanel);
-//        RightPanel.add(invoiceDatePanel);
+        RightPanel.add(invoiceDatePanel);
 //        RightPanel.add(CustomerNamePanel);
 //        RightPanel.add(invoiceTotalPanel);
         CombinedRightUpperPanel.setAlignmentX(JLabel.LEFT_ALIGNMENT);
@@ -376,7 +386,7 @@ public class GUI extends JFrame implements ActionListener {
         JPanel bigPanel= new JPanel();
         bigPanel.add(LeftPanel);
         bigPanel.add(RightPanel);
-        setSize(300,300);
+        setSize(400,400);
 
 
         filemenubar.setAlignmentX(JLabel.LEFT_ALIGNMENT);
@@ -404,6 +414,7 @@ public class GUI extends JFrame implements ActionListener {
         		      InvoiceNumber=(String) invoice_table.getValueAt(row, HeaderEnum.No.ordinal());
         		      invoiceNumber.setText(InvoiceNumber);
         		      CustomerName.setText((String) invoice_table.getValueAt(row, HeaderEnum.CusomterName.ordinal()));
+        		      invoiceDate.setText((String) invoice_table.getValueAt(row, HeaderEnum.Date.ordinal()));
         		     try {
         		    	 Total_items_label_right_side.setText((String) invoice_table.getValueAt(row, HeaderEnum.Total.ordinal()));
         		     }
@@ -715,6 +726,13 @@ public class GUI extends JFrame implements ActionListener {
         }
         if(e.getActionCommand()=="LocalSave"){
             CurrentRowsAdded=0;
+            invoice_table.setValueAt(CustomerName.getText(),highlightedrow,HeaderEnum.CusomterName.ordinal());
+            HeaderTableModel=new tablemodel(colNames,HeaderData);
+            invoice_table.setModel(HeaderTableModel);
+
+            invoice_table.setValueAt(invoiceDate.getText(),highlightedrow,HeaderEnum.Date.ordinal());
+            HeaderTableModel=new tablemodel(colNames,HeaderData);
+            invoice_table.setModel(HeaderTableModel);
 
 
         }

@@ -79,7 +79,7 @@ class tablemodel extends AbstractTableModel {
     }
     public boolean isCellEditable(int row, int column)
     {
-        if (columnNames[column].equals("No.") ||columnNames[column].equals("Total")|| columnNames[column].equals("Item Total") )
+        if (columnNames[column].equals("No.") ||columnNames[column].equals("Total")|| columnNames[column].equals("Item Total") ||columnNames[column].equals("Date")||columnNames[column].equals("Customer"))
         {
             return  false;
         }
