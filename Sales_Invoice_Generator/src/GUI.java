@@ -328,7 +328,7 @@ public class GUI extends JFrame implements ActionListener {
         //invoiceItemsTable.setModel(HeaderTableModel);
         invoiceItemsTable.setDefaultRenderer(Object.class, myRenderer);
 
-        SaveButton = new JButton("SAVE");
+        SaveButton = new JButton("Save Currently Added Details Addition");
         SaveButton.addActionListener(this);
         SaveButton.setActionCommand("LocalSave");
         CancelButton=new JButton("Cancel");
