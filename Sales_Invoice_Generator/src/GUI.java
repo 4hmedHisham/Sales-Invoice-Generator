@@ -511,10 +511,14 @@ public class GUI extends JFrame implements ActionListener {
                 ItemsDeatilsDataSorted.get(highlightedrow).remove((ItemsDeatilsDataSorted.get(highlightedrow).size()-1));
                 CurrentRowsAdded--;
             }
+
             else{
                 break;
             }
         }
+        CustomerName.setText((String)invoice_table.getValueAt(highlightedrow,HeaderEnum.CusomterName.ordinal()));
+        invoiceDate.setText((String)invoice_table.getValueAt(highlightedrow,HeaderEnum.Date.ordinal()));
+
         update_InvoiceLine_model();
     }
     public void cancel2(){
