@@ -1,4 +1,3 @@
-import javafx.animation.ScaleTransition;
 
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
