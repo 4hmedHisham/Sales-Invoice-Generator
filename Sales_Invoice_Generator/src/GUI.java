@@ -644,7 +644,7 @@ public class GUI extends JFrame implements ActionListener {
 
                     }
                     ItemsDeatilsDataSorted.add(new ArrayList<ArrayList<String>>(currentHeaderItems));
-                    HeaderElements.add(String.valueOf(sum));
+                    //HeaderElements.add(String.valueOf(sum));
                     HeaderData.add(new ArrayList<String> (HeaderElements));
 
 
@@ -782,7 +782,9 @@ public class GUI extends JFrame implements ActionListener {
                 path=openfile();
             }
             // isHeader;
+            InvoicePath=path;
             LoadLines(path);
+
             JOptionPane.showMessageDialog(this,
                     "Please Choose the Header Line");
             path = openfile();
