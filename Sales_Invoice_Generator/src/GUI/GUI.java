@@ -4,11 +4,14 @@ import FileOperations.DataParser;
 import FileOperations.DataStoreIO;
 import FileOperations.DataWriteIO;
 import Model.DataManipulator;
+import Model.InvoiceHeader;
+import Model.InvoiceLine;
 
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.xml.crypto.Data;
 import java.awt.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -100,13 +103,13 @@ public class GUI extends JFrame implements ActionListener {
 
 
     
-    String InvoiceNumber;
+    int InvoiceNumber;
 
     tablemodel HeaderTableModel;
-    tablemodel DetailsTableModel;
+    tablemodellines DetailsTableModel;
 
     void update_InvoiceLine_model(){
-        DetailsTableModel= new tablemodel(cols2,DataManipulator.ItemsDeatilsDataSorted.get(highlightedrow));
+        DetailsTableModel= new tablemodellines(cols2,DataManipulator.GlobalHeader.get(highlightedrow).getLines());
 
         invoiceItemsTable.setModel(DetailsTableModel);
         invoiceItemsTable.getModel().addTableModelListener(new TableModelListener() {
@@ -115,32 +118,30 @@ public class GUI extends JFrame implements ActionListener {
                 // your code goes here, whatever you want to do when something changes in the table
                 tablemodel modelx= (tablemodel) e.getSource();
                 String dataToReplace =(String) modelx.getValueAt(e.getFirstRow(),e.getColumn());
-                DataManipulator.ItemsDeatilsDataSorted.get(highlightedrow).get(e.getFirstRow()).set(e.getColumn(),dataToReplace);
-                int itemprice=0;
-                try{
-                    itemprice =Integer.parseInt((String) DataManipulator.ItemsDeatilsDataSorted.get(highlightedrow).get(e.getFirstRow()).get(DataManipulator.DetailsEnum.Item_Price.ordinal()));
 
+                if(e.getColumn()==1){
+                    DataManipulator.GlobalHeader.get(highlightedrow).getLines().get(e.getFirstRow()).setItemname((String)dataToReplace);
                 }
-                catch (Exception ee){}
-                int item_count=0;
-                try{
-                    item_count =Integer.parseInt((String) DataManipulator.ItemsDeatilsDataSorted.get(highlightedrow).get(e.getFirstRow()).get(DataManipulator.DetailsEnum.Count.ordinal()));
+                else if(e.getColumn()==2){
+                    DataManipulator.GlobalHeader.get(highlightedrow).getLines().get(e.getFirstRow()).setItemprice(Integer.parseInt(dataToReplace));
                 }
-                catch (Exception eee){}
+                else if(e.getColumn()==3){
+                    DataManipulator.GlobalHeader.get(highlightedrow).getLines().get(e.getFirstRow()).setCount(Integer.parseInt(dataToReplace));
+                }
                 modelx.removeTableModelListener(this);
-                modelx.setValueAt(String.valueOf(item_count*itemprice),e.getFirstRow(), DataManipulator.DetailsEnum.itemtotal.ordinal());
+                modelx.setValueAt(String.valueOf(DataManipulator.GlobalHeader.get(highlightedrow).getTotal()),e.getFirstRow(), DataManipulator.DetailsEnum.itemtotal.ordinal());
                 modelx.addTableModelListener(this);
-
-
                 int sum=DataManipulator.GetSum(highlightedrow);
 
 
                 Total_items_label_right_side.setText(String.valueOf(sum));
-                CustomerName.setText(DataManipulator.HeaderData.get(highlightedrow).get(DataManipulator.HeaderEnum.CusomterName.ordinal()));
+
+                CustomerName.setText(DataManipulator.GlobalHeader.get(highlightedrow).getCustomername());
 
 
 
-                HeaderTableModel=new tablemodel(colNames,DataManipulator.HeaderData);
+
+                HeaderTableModel=new tablemodel(colNames,DataManipulator.GlobalHeader);
                 invoice_table.setModel(HeaderTableModel);
                 invoice_table.getModel().addTableModelListener(new TableModelListener() {
 
@@ -148,7 +149,8 @@ public class GUI extends JFrame implements ActionListener {
                     public void tableChanged(TableModelEvent e) {
                         int sum=DataManipulator.GetSum(highlightedrow);
                         Total_items_label_right_side.setText(String.valueOf(sum));
-                        CustomerName.setText(DataManipulator.HeaderData.get(highlightedrow).get(DataManipulator.HeaderEnum.CusomterName.ordinal()));
+
+                        CustomerName.setText(DataManipulator.GlobalHeader.get(highlightedrow).getCustomername());
                         if(e.getColumn()== DataManipulator.HeaderEnum.Date.ordinal()){
 
                                 SimpleDateFormat formatter2=new SimpleDateFormat("dd-MM-yyyy");
@@ -173,15 +175,15 @@ public class GUI extends JFrame implements ActionListener {
     public GUI(){
         super("Sales Invoice Generator");
 
-        InvoiceNumber="INIT";
+        InvoiceNumber=-1;
 
         LeftPanel = new JPanel();
 
         //invoice_Number=23;
-        DataManipulator.HeaderData = new ArrayList<ArrayList<String>>();
-        //String [] emptyleft={" "," "," "," "};
-        //listoflists.add(new ArrayList<String> (Arrays.asList(emptyleft)));
-        HeaderTableModel= new tablemodel(colNames, DataManipulator.HeaderData);
+
+        DataManipulator.GlobalHeader=new ArrayList<InvoiceHeader>();
+
+        HeaderTableModel=new tablemodel(colNames,DataManipulator.GlobalHeader);
 
         invoice_table=new JTable();
         //invoice_table.setModel(HeaderTableModel);
@@ -227,7 +229,7 @@ public class GUI extends JFrame implements ActionListener {
         //inoviceNumberPanel.setBackground(Color.YELLOW);
         inoviceNumberPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
         invoiceNumber_title= new JLabel("Invoice Number");
-        invoiceNumber=new JLabel(InvoiceNumber);
+        invoiceNumber=new JLabel(String.valueOf(InvoiceNumber));
         inoviceNumberPanel.add(invoiceNumber_title);
         inoviceNumberPanel.add(invoiceNumber);
 
@@ -299,7 +301,7 @@ public class GUI extends JFrame implements ActionListener {
 
         //listoflists2.add(new ArrayList<String> (Arrays.asList(emptyright)));
         String []  ColsRight= {"No.","Item Name","Item Price","Count","Item Total"};
-        tablemodel DataDetailsTableModel = new tablemodel(ColsRight, DataManipulator.ItemsDeatilsData);
+        tablemodellines DataDetailsTableModel = new tablemodellines(ColsRight, new ArrayList<InvoiceLine>());
 
         //invoiceItemsTable.setModel(HeaderTableModel);
         invoiceItemsTable.setDefaultRenderer(Object.class, myRenderer);
@@ -377,12 +379,13 @@ public class GUI extends JFrame implements ActionListener {
         		      int row = target.getSelectedRow();
         		      prevHighlighed=highlightedrow;
         		      highlightedrow=row;
-        		      InvoiceNumber=(String) invoice_table.getValueAt(row, DataManipulator.HeaderEnum.No.ordinal());
-        		      invoiceNumber.setText(InvoiceNumber);
+        		      InvoiceNumber=(int)invoice_table.getValueAt(row, DataManipulator.HeaderEnum.No.ordinal());
+        		      invoiceNumber.setText(String.valueOf(InvoiceNumber));
         		      CustomerName.setText((String) invoice_table.getValueAt(row, DataManipulator.HeaderEnum.CusomterName.ordinal()));
         		      invoiceDate.setText((String) invoice_table.getValueAt(row, DataManipulator.HeaderEnum.Date.ordinal()));
         		     try {
-        		    	 Total_items_label_right_side.setText((String) invoice_table.getValueAt(row, DataManipulator.HeaderEnum.Total.ordinal()));
+        		         String curr_String=String.valueOf((int)invoice_table.getValueAt(row, DataManipulator.HeaderEnum.Total.ordinal()));
+        		    	 Total_items_label_right_side.setText(curr_String);
         		     }
         		     catch (Exception e1) {
 						// TODO: handle exception
@@ -390,18 +393,20 @@ public class GUI extends JFrame implements ActionListener {
 					}
         		     try{
                        //updatetotalPrice
-                         DataManipulator.UpdateTotalPrice(highlightedrow,row,invoice_table);
+
                          update_InvoiceLine_model();
                      }
         		     catch (Exception ex){
-                         DetailsTableModel=new tablemodel(cols2,new ArrayList<ArrayList<String>>());
+        		         System.out.println("IM IN EXCEPTION OF INVOICE LINE THINGY");
+                         DetailsTableModel=new tablemodellines(cols2,new ArrayList<InvoiceLine>());
                          invoiceItemsTable.setModel(DetailsTableModel);
                          update_InvoiceLine_model();
                      }
 
         		        while(CurrentRowsAdded>0 ){
         		            if(prevHighlighed!= -1){
-                                DataManipulator.ItemsDeatilsDataSorted.get(prevHighlighed).remove((DataManipulator.ItemsDeatilsDataSorted.get(prevHighlighed).size()-1));
+        		            	DataManipulator.GlobalHeader.get(prevHighlighed).getLines().remove(DataManipulator.GlobalHeader.get(prevHighlighed).getLines().size()-1);
+
                                 CurrentRowsAdded--;
                             }
                         }
@@ -412,42 +417,13 @@ public class GUI extends JFrame implements ActionListener {
 
 
     }
-    public void UpdateItemTotal(){
-        List<ArrayList<String>> rightlist=new ArrayList<ArrayList<String>>();
-        for(ArrayList<String> row1 : DataManipulator.ItemsDeatilsDataSorted.get(highlightedrow)) {
-            ArrayList<String>  rowCopied=new ArrayList(row1);
-            String leftcomp=rowCopied.get(0);
-            String rightcomp=(String) invoice_table.getValueAt(highlightedrow, DataManipulator.HeaderEnum.No.ordinal());
-            int TotalItemPrice=0;
-            if(leftcomp.equals(rightcomp)) {
-                int itemPrice=Integer.parseInt(rowCopied.get(DataManipulator.DetailsEnum.Item_Price.ordinal()));
-                int itemCount=Integer.parseInt(rowCopied.get(DataManipulator.DetailsEnum.Count.ordinal()));
 
-                try {
-                    TotalItemPrice=itemPrice*itemCount;
-                }
-                catch (Exception e3){
-                    TotalItemPrice=0;
-                }
-                try {
-                    row1.set(4,String.valueOf(TotalItemPrice));
-
-
-                }
-                catch (Exception e4){
-                    row1.add(String.valueOf(TotalItemPrice));
-                }
-
-                rowCopied.add(String.valueOf(TotalItemPrice));
-                rightlist.add(rowCopied);
-            }
-        }
-    }
     public void cancel(){
 
         while(CurrentRowsAdded>0 ){
             if(highlightedrow!= -1){
-                DataManipulator.ItemsDeatilsDataSorted.get(highlightedrow).remove((DataManipulator.ItemsDeatilsDataSorted.get(highlightedrow).size()-1));
+                DataManipulator.GlobalHeader.get(highlightedrow).getLines().remove(DataManipulator.GlobalHeader.get(highlightedrow).getLines().size()-1);
+
                 CurrentRowsAdded--;
             }
 
@@ -460,16 +436,16 @@ public class GUI extends JFrame implements ActionListener {
 
         update_InvoiceLine_model();
     }
-    public void cancel2(){
+    public void cancel2() throws IOException {
 
         LoadLines(InvoicePath);
         LoadHeaders(HeaderPath);
         if(highlightedrow == -1)
         {
-            DetailsTableModel=new tablemodel(cols2,new ArrayList<ArrayList<String>>());
+            DetailsTableModel=new tablemodellines(cols2,new ArrayList<InvoiceLine>());
         }
         else{
-            UpdateItemTotal();
+
             update_InvoiceLine_model();
         }
 
@@ -481,8 +457,11 @@ public class GUI extends JFrame implements ActionListener {
             int rows=invoice_table.getRowCount();
             String [] line={String.valueOf(rows+1),""," "," "};
 
-        DataManipulator.HeaderData.add(new ArrayList<String> (Arrays.asList(line)));
-        tablemodel newmodel= new tablemodel(colNames, DataManipulator.HeaderData);
+
+        DataManipulator.GlobalHeader.add(new InvoiceHeader(rows+1,""," ",new ArrayList<InvoiceLine>()));
+
+        tablemodel newmodel= new tablemodel(colNames, DataManipulator.GlobalHeader);
+
         invoice_table.setModel(newmodel);
         invoice_table.getModel().addTableModelListener(new TableModelListener(){
 
@@ -502,29 +481,19 @@ public class GUI extends JFrame implements ActionListener {
                 }
             }
         });
-        DetailsTableModel=new tablemodel(cols2,new ArrayList<ArrayList<String>>());
+        DetailsTableModel=new tablemodellines(cols2,new ArrayList<InvoiceLine>());
         invoiceItemsTable.setModel(DetailsTableModel);
-
-
-
-
     }
     public void DeleteInvoice(){
-        DataManipulator.HeaderData.remove(highlightedrow);
+
+        DataManipulator.GlobalHeader.remove(highlightedrow);
         int index=1;
-        for(ArrayList<String> Row : DataManipulator.HeaderData){
-            Row.set(DataManipulator.HeaderEnum.No.ordinal(), String.valueOf(index));
+
+        for(InvoiceHeader  Row : DataManipulator.GlobalHeader){
+            Row.setInvoiceNumber(index);
             index++;
         }
-        DataManipulator.ItemsDeatilsDataSorted.remove(highlightedrow);
-        index=1;
-        for(ArrayList<ArrayList<String>>batch : DataManipulator.ItemsDeatilsDataSorted){
-                for(ArrayList<String> Row : batch){
-                    Row.set(DataManipulator.HeaderEnum.No.ordinal(), String.valueOf(index));
-                }
-                index++;
-        }
-        tablemodel newmodel= new tablemodel(colNames, DataManipulator.HeaderData);
+        tablemodel newmodel= new tablemodel(colNames, DataManipulator.GlobalHeader);
         invoice_table.setModel(newmodel);
         invoice_table.getModel().addTableModelListener(new TableModelListener(){
 
@@ -544,26 +513,19 @@ public class GUI extends JFrame implements ActionListener {
                 }
             }
         });
-        DetailsTableModel=new tablemodel(cols2,new ArrayList<ArrayList<String>>());
+        DetailsTableModel=new tablemodellines(cols2,new ArrayList<InvoiceLine>());
         invoiceItemsTable.setModel(DetailsTableModel);
 
     }
     public void save(){
-        DataWriteIO write= new DataWriteIO(HeaderPath,InvoicePath,DataManipulator.HeaderData,DataManipulator.ItemsDeatilsDataSorted);
+        DataWriteIO write= new DataWriteIO(HeaderPath,InvoicePath,DataManipulator.GlobalHeader);
     }
     public void LoadHeaders(String path){
-        //path =openfile();
         DataStoreIO streamer;
-
-        DataManipulator.ItemsDeatilsDataSorted= new ArrayList<ArrayList<ArrayList<String>>>();
-        DataManipulator.HeaderData = new ArrayList<ArrayList<String>>();
-
-
-        //Boolean isHeader;
-        //isHeader=path.contains("Header");
+        DataManipulator.GlobalHeader= new ArrayList<InvoiceHeader>();
         try {
             DataParser.parseHeader(path);
-                tablemodel newmodel= new tablemodel(colNames, DataManipulator.HeaderData);
+                tablemodel newmodel= new tablemodel(colNames, DataManipulator.GlobalHeader);
                 invoice_table.setModel(newmodel);
             invoice_table.getModel().addTableModelListener(new TableModelListener(){
 
@@ -583,28 +545,12 @@ public class GUI extends JFrame implements ActionListener {
                     }
                 }
             });
-
-
-
-
-            // invoice_table=new JTable(listoflists,cols);
         }
         catch (IOException ioException)
         {ioException.printStackTrace();}
-
-
     }
-    public void LoadLines(String path){
-
-        DataManipulator.ItemsDeatilsData = new ArrayList<ArrayList<String>>();
-        //DataManipulator.ItemsDeatilsDataSorted=
-        //Boolean isHeader;
-        //isHeader=path.contains("Header");
-        //loadlines
-
-
-        // invoice_table=new JTable(listoflists,cols);
-
+    public void LoadLines(String path) throws IOException {
+        DataParser.parseLines(path);
 
     }
     public void actionPerformed(ActionEvent e){
@@ -620,11 +566,11 @@ public class GUI extends JFrame implements ActionListener {
         if(e.getActionCommand()=="LocalSave"){
             CurrentRowsAdded=0;
             invoice_table.setValueAt(CustomerName.getText(),highlightedrow, DataManipulator.HeaderEnum.CusomterName.ordinal());
-            HeaderTableModel=new tablemodel(colNames,DataManipulator.HeaderData);
+            HeaderTableModel=new tablemodel(colNames,DataManipulator.GlobalHeader);
             invoice_table.setModel(HeaderTableModel);
 
             invoice_table.setValueAt(invoiceDate.getText(),highlightedrow, DataManipulator.HeaderEnum.Date.ordinal());
-            HeaderTableModel=new tablemodel(colNames,DataManipulator.HeaderData);
+            HeaderTableModel=new tablemodel(colNames,DataManipulator.GlobalHeader);
             invoice_table.setModel(HeaderTableModel);
 
 
@@ -642,15 +588,17 @@ public class GUI extends JFrame implements ActionListener {
         if(e.getActionCommand()=="AddItem") {
 
             CurrentRowsAdded++;
-		     String [] arrIn= {String.valueOf(highlightedrow+1),"","","","0"};
+		     //String [] arrIn= {String.valueOf(highlightedrow+1),"","","","0"};
 		     //rightlist.add(new ArrayList<String> (Arrays.asList(arrIn)));
 		     try{
-                 DataManipulator.ItemsDeatilsDataSorted.get(highlightedrow).add(new ArrayList<String> (Arrays.asList(arrIn)));
+
+                 DataManipulator.GlobalHeader.get(highlightedrow).getLines().add(new InvoiceLine((highlightedrow+1),"",0,0));
              }
 		     catch (Exception eee3){
-		         ArrayList<ArrayList<String>> localList=new ArrayList<ArrayList<String >>();
-		         localList.add(new ArrayList<String> (Arrays.asList(arrIn)));
-		         DataManipulator.ItemsDeatilsDataSorted.add(localList);
+//		         ArrayList<ArrayList<String>> localList=new ArrayList<ArrayList<String >>();
+//		         localList.add(new ArrayList<String> (Arrays.asList(arrIn)));
+//		         DataManipulator.ItemsDeatilsDataSorted.add(localList);
+                 System.out.println("SomethingWrongHappened");
 
              }
             update_InvoiceLine_model();
@@ -672,7 +620,11 @@ public class GUI extends JFrame implements ActionListener {
             }
             // isHeader;
             InvoicePath=path;
-            LoadLines(path);
+            try {
+                LoadLines(path);
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
 
             JOptionPane.showMessageDialog(this,
                     "Please Choose the Header Line");

@@ -2,12 +2,13 @@ package GUI;
 
 import FileOperations.DataStoreIO;
 import Model.InvoiceHeader;
+import Model.InvoiceLine;
 
 import javax.swing.table.AbstractTableModel;
 import java.util.List;
 import java.util.ArrayList;
 
-class tablemodel extends AbstractTableModel {
+class tablemodellines extends AbstractTableModel {
 
     /**
 	 * 
@@ -19,20 +20,20 @@ class tablemodel extends AbstractTableModel {
     List<ArrayList<String>> data;
     DataStoreIO streamer;
     String fulldata;
-    ArrayList<InvoiceHeader> tablemodelHeaders;
+    ArrayList<InvoiceLine> tablemodellines;
     String path;
     int colCount;
 
-    public tablemodel(String [] colNames, ArrayList<InvoiceHeader> headers){
+    public tablemodellines(String [] colNames, ArrayList<InvoiceLine> lines){
         columnNames=colNames;
-        tablemodelHeaders=new ArrayList<InvoiceHeader>();
-        tablemodelHeaders=headers;
+        tablemodellines=new ArrayList<InvoiceLine>();
+        tablemodellines=lines;
         colCount=4;
     }
 //    public List<ArrayList<String>> getData(){
 //    	return data;
 //    }
-    public ArrayList<InvoiceHeader> getData(){return tablemodelHeaders;}
+    public ArrayList<InvoiceLine> getData(){return tablemodellines;}
     @Override
     public String getColumnName(int column) {
         return columnNames[column];
@@ -51,7 +52,7 @@ class tablemodel extends AbstractTableModel {
     @Override
     public int getRowCount() {
         try{
-            return tablemodelHeaders.size();
+            return tablemodellines.size();
         }
         catch(Exception e2){
             return 0;
@@ -61,20 +62,20 @@ class tablemodel extends AbstractTableModel {
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
         try{
-            if(rowIndex<tablemodelHeaders.size() && columnIndex<colCount&& (tablemodelHeaders!=null)) {
+            if(rowIndex<tablemodellines.size() && columnIndex<colCount&& (tablemodellines!=null)) {
 //                return data.get(rowIndex).get(columnIndex);
-                InvoiceHeader single_header=tablemodelHeaders.get(rowIndex);
+                InvoiceLine single_header=tablemodellines.get(rowIndex);
                 if(columnIndex==0){
-                    return single_header.getInvoiceNumber();
+                    return single_header.getInvoice_numer();
                 }
                 else if (columnIndex==1){
-                    return single_header.getInvoiceDate();
+                    return single_header.getItemname();
                 }
                 else if(columnIndex==2){
-                    return single_header.getCustomer_Name();
+                    return single_header.getItemprice();
                 }
                 else if(columnIndex==3){
-                    return single_header.getTotal();
+                    return single_header.getCount();
 
                 }
                 else{
@@ -94,21 +95,21 @@ class tablemodel extends AbstractTableModel {
 
         public void setValueAt(Object value, int row, int col) {
 
-            if(row<tablemodelHeaders.size() && col<colCount&& (tablemodelHeaders!=null)) {
-                InvoiceHeader single_header=tablemodelHeaders.get(row);
+            if(row<tablemodellines.size() && col<colCount&& (tablemodellines!=null)) {
+                InvoiceLine single_header=tablemodellines.get(row);
                 if(col==0){
-                    single_header.setInvoiceNumber((int)(value));
+                    single_header.setInvoice_numer((int)value);
                 }
                 else if (col==1){
-                    single_header.setInvoiceDate((String)(value));
+                    single_header.setItemname((String)value);
                 }
                 else if(col==2){
-                     single_header.setCustomer_Name((String)value);
+                     single_header.setItemprice(Integer.parseInt((String)value));
                 }
-//                else if(col==3){
-//                     single_header.setTotal((int)value);
-//
-//                }
+                else if(col==3){
+                     single_header.setCount(Integer.parseInt((String)value));
+
+                }
                 else{
                      new Exception("Invalid Column!!");
                 }
